@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Risikomanagement (DE) – Energieprojekte (LT/Umspannwerk/Thermo/Kohle→Gas)</title>
+
+  <!-- Favicon placeholder (será atualizado via JS quando o logo for carregado) -->
+  <link id="appFavicon" rel="icon" type="image/svg+xml"
+    href='data:image/svg+xml;utf8,
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+      <rect width="64" height="64" rx="14" fill="%230f1933"/>
+      <path d="M38 8 18 36h12l-4 20 20-30H34l4-18z" fill="%2364b5f6"/>
+      <text x="10" y="58" font-family="Arial" font-size="12" fill="%23bcd1ff">RM</text>
+    </svg>' />
+
+  <style>
+    :root{
+      --bg:#0b1220; --card:#111a2e; --muted:#9fb0d0; --text:#e9efff; --accent:#64b5f6;
+      --good:#2ecc71; --warn:#f1c40f; --bad:#e67e22; --crit:#e74c3c;
+      --line:#233255; --chip:#1a2542; --panel:#0b1327;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    body{ margin:0; font-family:var(--sans); background:linear-gradient(180deg,#070c16, var(--bg)); color:var(--text); }
+
+    header{
+      padding:14px 16px; border-bottom:1px solid var(--line);
+      background:rgba(17,26,46,.75); backdrop-filter: blur(6px);
+      position:sticky; top:0; z-index:10;
+      display:flex; gap:12px; align-items:flex-start;
+    }
+    .brand{ display:flex; gap:10px; align-items:center; min-width:280px; }
+    .logo{
+      width:42px; height:42px; border-radius:12px; background:#0f1933; border:1px solid var(--line);
+      overflow:hidden; display:grid; place-items:center; flex:0 0 auto;
+    }
+    .logo img{ width:100%; height:100%; object-fit:cover; display:none; }
+    .logo svg{ width:26px; height:26px; display:block; }
+    header h1{ margin:0; font-size:14px; font-weight:900; letter-spacing:.2px; }
+    header .sub{ margin-top:4px; color:var(--muted); font-size:11px; line-height:1.35; max-width:980px; }
+
+    main{ max-width:1250px; margin:0 auto; padding:14px 16px 22px; }
+
+    .card{
+      background:rgba(17,26,46,.85); border:1px solid var(--line); border-radius:12px;
+      padding:14px; box-shadow: 0 8px 28px rgba(0,0,0,.25);
+    }
+
+    h2{ margin:0 0 10px 0; font-size:14px; }
+    h3{ margin:10px 0 8px 0; font-size:13px; color:#dbe6ff; }
+    .muted{ color:var(--muted); font-size:12px; line-height:1.45; }
+    .small{ font-size:11px; color:var(--muted); line-height:1.35; }
+    .mono{ font-family:var(--mono); font-size:11px; color:#cfe1ff; }
+
+    .row{ display:flex; gap:10px; flex-wrap: wrap; align-items:flex-end; }
+    label{ font-size:12px; color:#dbe6ff; }
+    input[type="text"], input[type="date"], input[type="number"], select, textarea{
+      background:var(--panel); color:var(--text); border:1px solid var(--line);
+      border-radius:10px; padding:8px 10px; font-size:12px; outline:none;
+    }
+    input[type="number"]{ width:72px; }
+    input[type="file"]{ color:var(--muted); font-size:12px; }
+
+    button{
+      background: linear-gradient(180deg, #2a6df4, #1d4ed8);
+      border:1px solid rgba(100,181,246,.35); color:#fff;
+      padding:9px 12px; border-radius:10px; cursor:pointer;
+      font-size:12px; font-weight:900;
+    }
+    button.secondary{ background:var(--panel); border:1px solid var(--line); color:var(--text); font-weight:800; }
+    button.tab{
+      background:rgba(11,19,39,.7); border:1px solid rgba(35,50,85,.9); color:#cfe1ff;
+      font-weight:900; padding:9px 12px;
+    }
+    button.tab.active{
+      background:linear-gradient(180deg, rgba(100,181,246,.35), rgba(29,78,216,.35));
+      border-color:rgba(100,181,246,.55); color:#ffffff;
+    }
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+
+    fieldset{ border:1px solid var(--line); border-radius:12px; padding:10px; margin:10px 0; }
+    legend{ padding:0 8px; color:#dbe6ff; font-size:12px; font-weight:950; }
+
+    .checks{ display:grid; grid-template-columns:1fr; gap:8px; }
+    @media (min-width: 900px){ .checks{ grid-template-columns:1fr 1fr; } }
+
+    .check{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:9px 10px; border-radius:12px;
+      background: rgba(10,16,32,.60); border:1px solid rgba(35,50,85,.75);
+    }
+    .check input{ margin-top:3px; transform: scale(1.05); }
+    .check .t{ font-size:12px; line-height:1.25; font-weight:950; color:#e9efff; }
+    .check .d{ margin-top:3px; font-size:11px; line-height:1.35; color:var(--muted); }
+    .check .r{ margin-top:6px; font-size:11px; color:#bcd1ff; }
+    .check .code{ margin-top:6px; font-size:11px; font-family:var(--mono); color:#cfe1ff; opacity:.9; }
+
+    .chip{
+      display:inline-block; background:var(--chip); border:1px solid rgba(35,50,85,.9);
+      padding:2px 8px; border-radius:999px; font-size:11px; color:#dbe6ff;
+      margin:2px 4px 0 0;
+    }
+
+    /* Tables: sticky header INSIDE scroll container (prevents overlap with global header) */
+    .table-wrap{
+      margin-top:10px; border:1px solid var(--line); border-radius:12px;
+      overflow:auto; max-height: 560px; background: rgba(10,16,32,.35);
+    }
+    table{ width:100%; border-collapse:separate; border-spacing:0; min-width: 1120px; }
+    th, td{ border-bottom:1px solid rgba(35,50,85,.8); padding:8px 8px; vertical-align:top; }
+    th{
+      position:sticky; top:0; z-index:2;
+      background:#0f1933; font-size:11px; text-transform:uppercase;
+      letter-spacing:.6px; color:#bcd1ff;
+    }
+    td{ font-size:12px; }
+    tr:last-child td{ border-bottom:none; }
+
+    .lvl{ font-weight:950; padding:2px 8px; border-radius:999px; display:inline-block; font-size:11px; border:1px solid rgba(255,255,255,.1); }
+    .lvl.low{ background:rgba(46,204,113,.16); color:#b7f3cd; border-color:rgba(46,204,113,.35); }
+    .lvl.med{ background:rgba(241,196,15,.16); color:#ffeaa7; border-color:rgba(241,196,15,.35); }
+    .lvl.high{ background:rgba(230,126,34,.16); color:#ffd3a8; border-color:rgba(230,126,34,.35); }
+    .lvl.crit{ background:rgba(231,76,60,.16); color:#ffb4ad; border-color:rgba(231,76,60,.35); }
+    .critical-row{ outline:2px solid rgba(231,76,60,.35); background:rgba(231,76,60,.06); }
+
+    .grid2{ display:grid; grid-template-columns: 1fr; gap:12px; }
+    @media (min-width: 1000px){ .grid2{ grid-template-columns: 1.2fr .8fr; } }
+
+    .tools{ display:flex; gap:8px; flex-wrap:wrap; }
+    .panel{ display:none; }
+    .panel.active{ display:block; }
+    .footer-note{ margin-top:10px; font-size:11px; color:var(--muted); line-height:1.45; }
+
+    .kbd { font-family:var(--mono); font-size:11px; color:#dbe6ff; padding:2px 6px; border:1px solid rgba(35,50,85,.8); border-radius:8px; background:rgba(11,19,39,.6); }
+  </style>
+
+  <!-- PDF libs (client-side). Offline: download and reference locally -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-label="Logo">
+      <img id="brandLogoImg" alt="RISIKO Management Logo"/>
+      <!-- fallback svg (if no logo uploaded) -->
+      <svg id="brandLogoFallback" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M14 2 5 14h7l-2 8 9-13h-7l2-7Z" fill="#64b5f6"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Risikomanagement – Parametrischer Generator (DE)</h1>
+      <div class="sub">
+        Energieprojekte: Übertragungsleitungen, Umspannwerke, Thermokraftwerke, Kohle→Gas.
+        Auswahl per Checkboxen erzeugt Anforderungen, Risiken, Maßnahmen, Terminplan (CPM) und PDF‑Abschlussbericht (SLA + Task‑Anchors).<br/>
+        Keine Rechtsberatung.
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="tabs card" style="padding:10px 12px;">
+    <button class="tab active" data-tab="tab-config">Konfiguration</button>
+    <button class="tab" data-tab="tab-req">Anforderungen</button>
+    <button class="tab" data-tab="tab-risk">Risiken</button>
+    <button class="tab" data-tab="tab-sched">Terminplan</button>
+    <button class="tab" data-tab="tab-report">Report/Export</button>
+  </div>
+
+  <!-- TAB: CONFIG -->
+  <section id="tab-config" class="panel active">
+    <div class="grid2" style="margin-top:12px">
+
+      <section class="card">
+        <h2>1) Projektkonfiguration</h2>
+
+        <div class="row">
+          <label>Projektname<br/>
+            <input id="projectName" type="text" placeholder="z.B. Leitung + UW + Kohle→Gas" style="min-width:320px"/>
+          </label>
+          <label>Projektstart (CPM &amp; SLA)<br/>
+            <input id="projectStart" type="date"/>
+          </label>
+          <label>Risikobewertung – Schwellen<br/>
+            <select id="thresholdPreset">
+              <option value="default" selected>Standard (1–4 niedrig, 5–9 mittel, 10–16 hoch, 17–25 kritisch)</option>
+              <option value="conservative">Konservativ (1–3 niedrig, 4–8 mittel, 9–15 hoch, 16–25 kritisch)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="tools" style="margin-top:10px">
+          <button id="btnGenerate">Generieren / Aktualisieren</button>
+          <button class="secondary" id="btnSave">Speichern</button>
+          <button class="secondary" id="btnLoad">Laden</button>
+          <button class="secondary" id="btnReset">Reset</button>
+        </div>
+
+        <fieldset>
+          <legend>Branding (Logo &amp; Favicon)</legend>
+          <div class="muted">
+            Laden Sie Ihr Logo (PNG/JPG) hoch. Es wird lokal gespeichert (<span class="kbd">localStorage</span>) und automatisch in den PDF‑Report übernommen.
+          </div>
+          <div class="row" style="margin-top:10px">
+            <label>Logo hochladen<br/>
+              <input id="logoUpload" type="file" accept="image/*" />
+            </label>
+            <button class="secondary" id="btnClearLogo">Logo entfernen</button>
+          </div>
+          <div class="small" style="margin-top:8px">
+            Empfehlung: quadratisches Logo (z.B. 512×512). Das System skaliert automatisch.
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Module / Umfang</legend>
+          <div class="checks" id="group_scope"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Genehmigungen / Verfahren</legend>
+          <div class="checks" id="group_permitting"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Umwelt / Raum</legend>
+          <div class="checks" id="group_environment"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Prozess-/Anlagensicherheit &amp; Industrie</legend>
+          <div class="checks" id="group_process"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Netz / Betrieb / OT-IT</legend>
+          <div class="checks" id="group_grid"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Bau / HSE</legend>
+          <div class="checks" id="group_hse"></div>
+        </fieldset>
+
+        <div class="footer-note">
+          Tipp: Ändern Sie <b>Dauer</b> im Terminplan und klicken Sie dann <b>Generieren</b>, um CPM + SLA neu zu berechnen.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2) Überblick</h2>
+        <h3>Aktive Merkmale</h3>
+        <div id="activeFeatures" class="small">—</div>
+
+        <h3 style="margin-top:12px">Zähler</h3>
+        <div class="small" id="counts">—</div>
+
+        <h3 style="margin-top:12px">Benutzung</h3>
+        <div class="small">
+          <ul style="margin:6px 0 0 18px; padding:0; line-height:1.5">
+            <li>In <b>Risiken</b> können Sie P/I überschreiben.</li>
+            <li>In <b>Terminplan</b> können Sie Dauern überschreiben.</li>
+            <li>Der PDF‑Report enthält SLA‑Fälligkeiten, die (a) Gate‑kalibriert sind und (b) an Tasks „verankert“ sind.</li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- TAB: REQUIREMENTS -->
+  <section id="tab-req" class="panel">
+    <div class="card" style="margin-top:12px">
+      <h2>Anwendbare Anforderungen (Legal/Normen Register)</h2>
+      <div class="muted">Automatisch gefiltert nach Auswahl. „Evidenzen/Deliverables“ können als Audit‑Checkliste genutzt werden.</div>
+      <div class="table-wrap">
+        <table id="tblReq">
+          <thead>
+            <tr>
+              <th>ID</th><th>Thema</th><th>Referenz</th><th>Pflicht/Zweck</th><th>Evidenzen</th><th>Trigger</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: RISKS -->
+  <section id="tab-risk" class="panel">
+    <div class="card" style="margin-top:12px">
+      <h2>Risikoregister (P×I) mit Maßnahmen</h2>
+      <div class="muted">P/I (1–5) ist überschreibbar. Score &amp; Stufe werden live berechnet.</div>
+      <div class="table-wrap">
+        <table id="tblRisk">
+          <thead>
+            <tr>
+              <th>ID</th><th>Kategorie</th><th>Risiko</th><th>Ursache/Trigger</th><th>Anforderungen</th>
+              <th>P</th><th>I</th><th>Score</th><th>Stufe</th>
+              <th>Prävention</th><th>Monitoring</th><th>Kontingenz</th><th>Owner</th><th>Gate</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: SCHEDULE -->
+  <section id="tab-sched" class="panel">
+    <div class="card" style="margin-top:12px">
+      <h2>Terminplan (WBS) inkl. Kritischer Pfad (CPM)</h2>
+      <div class="muted">Dauer ist editierbar; danach „Generieren/Aktualisieren“ klicken. Kritische Vorgänge (Float=0) sind markiert.</div>
+      <div class="table-wrap">
+        <table id="tblSched">
+          <thead>
+            <tr>
+              <th>ID</th><th>Tätigkeit</th><th>Modul</th><th>Dauer</th><th>Vorgänger</th>
+              <th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>Float</th><th>Kritisch</th>
+              <th>Deliverable</th><th>Owner</th><th>Gate</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="footer-note" id="schedNote"></div>
+    </div>
+  </section>
+
+  <!-- TAB: REPORT -->
+  <section id="tab-report" class="panel">
+    <div class="card" style="margin-top:12px">
+      <h2>Report / Export</h2>
+      <div class="tools">
+        <button class="secondary" id="btnExportReq">CSV: Anforderungen</button>
+        <button class="secondary" id="btnExportRisk">CSV: Risiken</button>
+        <button class="secondary" id="btnExportSched">CSV: Terminplan</button>
+        <button class="secondary" id="btnExportJSON">JSON: Alles</button>
+        <button id="btnExportPDF">PDF: Abschlussbericht</button>
+      </div>
+      <div class="footer-note">
+        PDF enthält: Merkmale, Anforderungen, Risikoübersicht, SLA‑Tracker, Detailanalyse (inkl. Anchors) und Konfliktliste.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* =========================
+   Tabs
+   ========================= */
+function setActiveTab(tabId){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById(tabId).classList.add("active");
+  document.querySelectorAll("button.tab").forEach(b=>{
+    b.classList.toggle("active", b.dataset.tab === tabId);
+  });
+}
+document.querySelectorAll("button.tab").forEach(b=>{
+  b.addEventListener("click", ()=> setActiveTab(b.dataset.tab));
+});
+
+/* =========================
+   Branding (logo upload -> localStorage -> header + favicon + PDF)
+   ========================= */
+const BRANDING_KEY = "riskMatrixBranding_v1";
+
+function guessImageTypeFromDataUrl(dataUrl){
+  if(!dataUrl) return null;
+  if(dataUrl.startsWith("data:image/png")) return "PNG";
+  if(dataUrl.startsWith("data:image/jpeg") || dataUrl.startsWith("data:image/jpg")) return "JPEG";
+  // fallback: jsPDF often supports PNG/JPEG; we store as PNG in resize routine
+  return "PNG";
+}
+
+function setFaviconFromDataUrl(dataUrl){
+  const link = document.getElementById("appFavicon");
+  if(!dataUrl){
+    // keep default svg
+    return;
+  }
+  link.setAttribute("type", "image/png");
+  link.setAttribute("href", dataUrl);
+}
+
+function applyLogoToHeader(dataUrl){
+  const img = document.getElementById("brandLogoImg");
+  const fallback = document.getElementById("brandLogoFallback");
+  if(dataUrl){
+    img.src = dataUrl;
+    img.style.display = "block";
+    fallback.style.display = "none";
+    setFaviconFromDataUrl(dataUrl);
+  }else{
+    img.removeAttribute("src");
+    img.style.display = "none";
+    fallback.style.display = "block";
+  }
+}
+
+function loadBranding(){
+  try{
+    const raw = localStorage.getItem(BRANDING_KEY);
+    if(!raw) return { logoDataUrl:null };
+    return JSON.parse(raw);
+  }catch{ return { logoDataUrl:null }; }
+}
+
+function saveBranding(branding){
+  localStorage.setItem(BRANDING_KEY, JSON.stringify(branding));
+}
+
+async function resizeImageToDataUrl(file, maxSize=256){
+  // Read file -> Image -> Canvas -> dataURL (PNG)
+  const dataUrl = await new Promise((resolve, reject)=>{
+    const fr = new FileReader();
+    fr.onload = ()=> resolve(fr.result);
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+
+  const img = await new Promise((resolve, reject)=>{
+    const im = new Image();
+    im.onload = ()=> resolve(im);
+    im.onerror = reject;
+    im.src = dataUrl;
+  });
+
+  const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+  const w = Math.max(1, Math.round(img.width * scale));
+  const h = Math.max(1, Math.round(img.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, w, h);
+
+  // store as PNG to be safely used in jsPDF
+  return canvas.toDataURL("image/png", 0.92);
+}
+
+document.getElementById("logoUpload").addEventListener("change", async (e)=>{
+  const file = e.target.files?.[0];
+  if(!file) return;
+  try{
+    const resized = await resizeImageToDataUrl(file, 256);
+    const branding = loadBranding();
+    branding.logoDataUrl = resized;
+    saveBranding(branding);
+    applyLogoToHeader(resized);
+    alert("Logo gespeichert und angewendet.");
+  }catch(err){
+    console.error(err);
+    alert("Logo konnte nicht verarbeitet werden.");
+  } finally {
+    e.target.value = "";
+  }
+});
+
+document.getElementById("btnClearLogo").addEventListener("click", ()=>{
+  saveBranding({logoDataUrl:null});
+  applyLogoToHeader(null);
+  alert("Logo entfernt.");
+});
+
+/* =========================
+   Helper: DOM
+   ========================= */
+function el(tag, attrs={}, ...children){
+  const e = document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){
+    if(k==="class") e.className=v;
+    else if(k==="html") e.innerHTML=v;
+    else e.setAttribute(k,v);
+  }
+  for(const c of children){
+    if(c==null) continue;
+    if(typeof c==="string") e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  }
+  return e;
+}
+
+/* =========================
+   Features (selecionáveis com explicação)
+   ========================= */
+const FEATURES = [
+  // scope
+  {id:"MOD_LINIE", group:"scope",
+   title:"Übertragungs-/Hochspannungsleitung (Freileitung/Kabel)",
+   desc:"Aktiviert Leitungs-spezifische Anforderungen/Risiken (Trasse, ROW/Servituten, Mastfundamente, Montagefenster, Betrieb).",
+   refs:"DIN EN 50341; DIN EN 60826; DIN VDE 0105-100"},
+  {id:"MOD_UMSPANN", group:"scope",
+   title:"Umspannwerk / Schaltanlage (AIS/GIS)",
+   desc:"Aktiviert Erdung/Schutz, Schaltgeräte (IEC 62271), Abnahmen, TSO/DSO-Interfaces.",
+   refs:"DIN EN 61936-1 (VDE 0101-1); DIN EN 50522; IEC 62271"},
+  {id:"MOD_THERMO", group:"scope",
+   title:"Thermisches Kraftwerk (Bestand/Neubau, z.B. GuD)",
+   desc:"Aktiviert Immissionsschutz, Prozess-/Betriebssicherheit und ETS/MRV (projektabhängig).",
+   refs:"BImSchG; TA Luft; TA Lärm; TEHG"},
+  {id:"MOD_COAL2GAS", group:"scope",
+   title:"Konversion Kohle → Gas (Umbau/Repowering)",
+   desc:"Fokus auf Umbau im Bestand, Demontage, Altlasten/Asbest, Prozessänderungen und Genehmigungsänderung.",
+   refs:"BImSchG; GefStoffV/TRGS; KrWG"},
+  {id:"MOD_GAS_CONN", group:"scope",
+   title:"Gasanbindung / Gasnetz-Interface",
+   desc:"Schnittstelle zum Gasnetz (Druck/Qualität/Kapazität) als potenzieller kritischer Pfad.",
+   refs:"EnWG; Betreiberregeln (DVGW je nach Scope)"},
+  {id:"MOD_SCADA", group:"scope",
+   title:"Leittechnik/SCADA/Telekommunikation (OT)",
+   desc:"Aktiviert OT-Security, Segmentierung/Remote-Access und Abnahmetests (z.B. Teleprotektion).",
+   refs:"IEC 62443; ggf. BSIG/BSI-KRITIS"},
+  {id:"MOD_DEMO", group:"scope",
+   title:"Rückbau/Demontage/Abbruch im Bestand",
+   desc:"Aktiviert Abbruch-/Schadstoff-/Entsorgungsanforderungen inkl. TRGS-konformer Prozesse.",
+   refs:"GefStoffV/TRGS; KrWG"},
+
+  // permitting
+  {id:"PERM_PLANFEST", group:"permitting",
+   title:"Planfeststellungsverfahren / Linieninfrastruktur",
+   desc:"Genehmigungskette inkl. Einwendungsmanagement (typisch Leitung/Trasse).",
+   refs:"EnWG; NABEG; BBPlG (projektabhängig)"},
+  {id:"PERM_BIMSCHG", group:"permitting",
+   title:"Genehmigung nach BImSchG (Industrieanlage)",
+   desc:"BImSchG-Antrag/Auflagenmanagement für Kraftwerks-/Industrieanlage (inkl. Änderungsgenehmigung).",
+   refs:"BImSchG; 4. BImSchV"},
+  {id:"PERM_UVPG", group:"permitting",
+   title:"UVP / EIA erforderlich (UVPG)",
+   desc:"UVP-Prozess (Scoping, Umweltbericht, Beteiligung). Kann saisonale Kartierungen erzwingen.",
+   refs:"UVPG"},
+  {id:"PERM_WHG", group:"permitting",
+   title:"Wasserrecht (WHG) relevant",
+   desc:"Wasserrechtliche Genehmigungen (Querungen, Einleitungen, Schutzgebiete).",
+   refs:"WHG + Landesrecht"},
+  {id:"PERM_LBO", group:"permitting",
+   title:"Landesbauordnung (LBO) relevant",
+   desc:"Bauordnungsrechtliche Aspekte 
